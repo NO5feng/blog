@@ -7,7 +7,7 @@ import (
 	"html/template"
 )
 
-func GetAllIndexInfo(page, pagSize int) (*models.HomeResponse, error) {
+func GetPostsByCategoryId(cId, page, pageSize int) (*models.CategoryResponse, error) {
 	// 获取 个人信息页面标签内容
 	categorys, err := mysql.GetAllCategory()
 	if err != nil {
@@ -15,7 +15,7 @@ func GetAllIndexInfo(page, pagSize int) (*models.HomeResponse, error) {
 	}
 
 	// 获取post页面内容（文章内容）
-	posts, err := mysql.GetPostPage(page, pagSize)
+	posts, err := mysql.GetPostPageByCategoryId(cId, page, pageSize)
 	var postMores []models.PostMore
 	for _, post := range posts {
 		categoryName := mysql.GetCategoryNameById(post.CategoryId)
@@ -42,7 +42,7 @@ func GetAllIndexInfo(page, pagSize int) (*models.HomeResponse, error) {
 		postMores = append(postMores, postMore)
 	}
 
-	total := mysql.CountGetAllPost()
+	total := mysql.CountGetAllPostByCategoryId(cId)
 	pagesCount := (total-1)/10 + 1
 	var pages []int
 	for i := 0; i < pagesCount; i++ {
@@ -55,7 +55,13 @@ func GetAllIndexInfo(page, pagSize int) (*models.HomeResponse, error) {
 		total,
 		page,
 		pages,
-		page == pagesCount,
+		page != pagesCount,
 	}
-	return hr, err
+
+	categoryName := mysql.GetCategoryNameById(cId)
+	categoryResponse := &models.CategoryResponse{
+		hr,
+		categoryName,
+	}
+	return categoryResponse, nil
 }
